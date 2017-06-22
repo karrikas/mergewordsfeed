@@ -4,6 +4,6 @@ parameters:
     #parameter_name: value
 
 services:
-    #service_name:
-    #    class: AppBundle\Directory\ClassName
-    #    arguments: ['@another_service_name', 'plain_value', '%parameter_name%']
+    app.twitter:
+        class:     AppBundle\Service\Twitter
+        arguments: ['%twitter_consumer_key%', '%twitter_consumer_secret%']

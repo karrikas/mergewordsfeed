@@ -15,3 +15,5 @@
 
 /build.xml
 /rsync_exclude
+
+/app/data.db3
