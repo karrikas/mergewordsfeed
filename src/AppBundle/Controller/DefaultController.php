@@ -14,6 +14,14 @@ use AppBundle\Entity\TwitterConnect;
 class DefaultController extends Controller
 {
     /**
+     * @Route("/", name="index")
+     */
+    public function indexAction()
+    {
+        return $this->render('default/index.html.twig');
+    }
+
+    /**
      * @Route("/feed/{number}.xml", defaults={"_format"="xml"}, name="feed")
      */
     public function feedAction(Request $request, $number)
