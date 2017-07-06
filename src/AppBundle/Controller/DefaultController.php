@@ -40,6 +40,33 @@ class DefaultController extends Controller
     }
 
     /**
+     * @Route("/messages/delete", name="messages-delete")
+     */
+    public function messagesDeleteAction(Request $request)
+    {
+        $em = $this->get('doctrine')->getManager();
+
+        $group = $request->get('group');
+        $group = urldecode($group);
+
+        if (!$group) {
+            throw new \Exception("Group not found");
+        }
+
+        $messages = $em->getRepository('AppBundle:Message')->findBy(
+            ['groupName' => $group],
+            ['id' => 'desc']
+        );
+
+        foreach ($messages as $message) {
+            $em->remove($message);
+        }
+        $em->flush();
+
+        return $this->redirectToRoute('messages');
+    }
+
+    /**
      * @Route("/messages", name="messages")
      */
     public function messagesAction(Request $request)
@@ -53,17 +80,17 @@ class DefaultController extends Controller
         $groups = $group->getResult();
 
         $group = $request->get('group');
+        $group = urldecode($group);
 
+        $filter = [];
         if (!empty($group)) {
-            $messages = $em->getRepository('AppBundle:Message')->findBy(
-                ['groupName' => $group],
-                ['id' => 'desc']
-            );
-        } else {
-            $messages = $em->getRepository('AppBundle:Message')->findAll(
-                ['id' => 'desc']
-            );
+            $filter = ['groupName' => $group];
         }
+
+        $messages = $em->getRepository('AppBundle:Message')->findBy(
+            $filter,
+            ['id' => 'desc']
+        );
 
         $paginator  = $this->get('knp_paginator');
         $messages = $paginator->paginate(
@@ -73,6 +100,7 @@ class DefaultController extends Controller
         );
 
         return $this->render('default/messages.html.twig', [
+            'selected' => $group,
             'groups' => $groups,
             'messages' => $messages
         ]);
