@@ -53,7 +53,6 @@ class DefaultController extends Controller
         $groups = $group->getResult();
 
         $group = $request->get('group');
-        echo $group;
 
         if (!empty($group)) {
             $messages = $em->getRepository('AppBundle:Message')->findBy(
