@@ -1,0 +1,50 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="container">
+    <div class="rows">
+        <div class="col-md-12">
+            <h1>Messages</h1>
+        </div>
+        <div class="col-md-12">
+            <p>
+                <a href="{{ path('messages') }}" class="label label-info">All</a>
+                {% for group in groups %}
+                <a href="{{ path('messages', {group: group.groupName|url_encode}) }}" class="label label-default">{{ group.groupName }}</a>
+                {% endfor %}
+            </p>
+        </div>
+
+        <div class="col-md-12">
+            <div class="panel panel-default">
+
+                <table class="table">
+                    <tr>
+                        <th>#</th>
+                        <th>Message</th>
+                        <th>Group</th>
+                        <th>Used</th>
+                        <th>Created</th>
+                        <th>Time</th>
+                    </tr>
+                    {% for message in messages %}
+                    <tr>
+                        <td>#{{ message.id }}</td>
+                        <td>{{ message.message }}</td>
+                        <td>{{ message.groupName }}</td>
+                        <td>{{ (message.used)? 'true':'false' }}</td>
+                        <td>{{ message.created|date('Y/m/d') }}</td>
+                        <td>{{ message.created|date('H:i:s') }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+
+            <div class="navigation">
+                {{ knp_pagination_render(messages) }}
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
