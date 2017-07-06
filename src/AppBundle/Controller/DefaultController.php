@@ -10,6 +10,7 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use AppBundle\Entity\TwitterConnect;
+use AppBundle\Entity\Message;
 
 class DefaultController extends Controller
 {
@@ -22,53 +23,60 @@ class DefaultController extends Controller
     }
 
     /**
-     * @Route("/feed/{number}.xml", defaults={"_format"="xml"}, name="feed")
-     */
-    public function feedAction(Request $request, $number)
-    {
-        $feedPath = $this->get('kernel')->getRootDir().'/var/feed/'.$number.'/';
-        $ignored = array('.', '..');
-
-        $files = array();
-        foreach (scandir($feedPath) as $file) {
-            if (in_array($file, $ignored)) {
-                continue;
-            }
-            $files[$file] = filectime($feedPath.'/'.$file);
-        }
-
-        arsort($files);
-        $files = array_slice($files, 0, 10);
-
-        $feed = [];
-        foreach ($files as $key => $date) {
-            $info = file_get_contents($feedPath.$key);
-            $feed[] = [
-                'date' => date('r', $date),
-                'content' => $info,
-                'md5' => md5($date),
-            ];
-        }
-
-        return $this->render('default/feed.xml.twig', [
-            'feed' => $feed,
-            'feedId' => $number,
-        ]);
-    }
-
-    /**
      * @Route("/mixer", name="mixer")
      */
     public function mixerAction(Request $request)
     {
-        if ($request->isMethod("post")) {
+        if ($request->isMethod('post')) {
+            $group = $request->get('group');
             $mix = $request->get('mix');
-            $this->mix($mix);
+
+            $this->mix($group, $mix);
 
             return $this->redirectToRoute('mixer');
         }
 
         return $this->render('default/mixer.html.twig');
+    }
+
+    /**
+     * @Route("/messages", name="messages")
+     */
+    public function messagesAction(Request $request)
+    {
+        $em = $this->get('doctrine')->getManager();
+        $group = $em->getRepository('AppBundle:Message')
+            ->createQueryBuilder('m')
+            ->select('DISTINCT m.groupName')
+            ->getQuery();
+
+        $groups = $group->getResult();
+
+        $group = $request->get('group');
+        echo $group;
+
+        if (!empty($group)) {
+            $messages = $em->getRepository('AppBundle:Message')->findBy(
+                ['groupName' => $group],
+                ['id' => 'desc']
+            );
+        } else {
+            $messages = $em->getRepository('AppBundle:Message')->findAll(
+                ['id' => 'desc']
+            );
+        }
+
+        $paginator  = $this->get('knp_paginator');
+        $messages = $paginator->paginate(
+            $messages, /* query NOT result */
+            $request->query->getInt('page', 1)/*page number*/,
+            50/*limit per page*/
+        );
+
+        return $this->render('default/messages.html.twig', [
+            'groups' => $groups,
+            'messages' => $messages
+        ]);
     }
 
     /**
@@ -130,14 +138,29 @@ class DefaultController extends Controller
         return new JsonResponse($test);
     }
 
-    protected function mix($value)
+    protected function mix($group, $value)
     {
+        $em = $this->get('doctrine')->getManager();
+
+        if (empty($group)) {
+            $group = 'group-'.date('YmdHis');
+        }
+
+        $haveGroup = false;
+
+        while (!$haveGroup) {
+            $messages = $em->getRepository('AppBundle:Message')->findBy(['groupName' => $group]);
+            if (count($messages) == 0) {
+                $haveGroup = true;
+            } else {
+                $group .= '-'.date('YmdHis');
+            }
+        }
+
         $info = [];
         foreach ($value as $key => $mix) {
             $info[] = explode("\n", $mix);
         }
-
-        $varPath = $this->get('kernel')->getRootDir().'/var/twet/';
 
         $str = [];
         for ($i=0; $i<count($info[0]); $i++) {
@@ -151,7 +174,11 @@ class DefaultController extends Controller
         }
 
         foreach ($str as $key => $s) {
-            file_put_contents($varPath.md5($s).'.txt', $s);
+            $message = new Message();
+            $message->setGroupName($group);
+            $message->setMessage($s);
+            $em->persist($message);
         }
+        $em->flush();
     }
 }
