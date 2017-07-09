@@ -16,9 +16,18 @@ class Twitter
         define('OAUTH_CALLBACK', getenv('OAUTH_CALLBACK'));
     }
 
-    public function getConnection($accessToken, $accessTokenSecret)
+    public function getConnection($accessToken = null, $accessTokenSecret = null)
     {
         return new TwitterOAuth($this->comsumerKey, $this->comsumerSecret, $accessToken, $accessTokenSecret);
+    }
+
+    public function getAuthorizeUrl($connection)
+    {
+        $request_token = $connection->oauth('oauth/request_token', array('oauth_callback' => OAUTH_CALLBACK));
+        $_SESSION['oauth_token'] = $request_token['oauth_token'];
+        $_SESSION['oauth_token_secret'] = $request_token['oauth_token_secret'];
+        
+        return $connection->url('oauth/authorize', array('oauth_token' => $request_token['oauth_token']));
     }
 
     /**

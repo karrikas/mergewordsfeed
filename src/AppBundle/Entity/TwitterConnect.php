@@ -26,6 +26,21 @@ class TwitterConnect
     private $access_token_secret;
 
     /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $user_id;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $screen_name;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $x_auth_expires;
+
+    /**
      * Get id
      *
      * @return integer
@@ -81,5 +96,77 @@ class TwitterConnect
     public function getAccessTokenSecret()
     {
         return $this->access_token_secret;
+    }
+
+    /**
+     * Set userId
+     *
+     * @param string $userId
+     *
+     * @return TwitterConnect
+     */
+    public function setUserId($userId)
+    {
+        $this->user_id = $userId;
+
+        return $this;
+    }
+
+    /**
+     * Get userId
+     *
+     * @return string
+     */
+    public function getUserId()
+    {
+        return $this->user_id;
+    }
+
+    /**
+     * Set screenName
+     *
+     * @param string $screenName
+     *
+     * @return TwitterConnect
+     */
+    public function setScreenName($screenName)
+    {
+        $this->screen_name = $screenName;
+
+        return $this;
+    }
+
+    /**
+     * Get screenName
+     *
+     * @return string
+     */
+    public function getScreenName()
+    {
+        return $this->screen_name;
+    }
+
+    /**
+     * Set xAuthExpires
+     *
+     * @param string $xAuthExpires
+     *
+     * @return TwitterConnect
+     */
+    public function setXAuthExpires($xAuthExpires)
+    {
+        $this->x_auth_expires = $xAuthExpires;
+
+        return $this;
+    }
+
+    /**
+     * Get xAuthExpires
+     *
+     * @return string
+     */
+    public function getXAuthExpires()
+    {
+        return $this->x_auth_expires;
     }
 }
