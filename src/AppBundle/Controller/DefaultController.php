@@ -107,35 +107,60 @@ class DefaultController extends Controller
     }
 
     /**
+     * @Route("/oauth", name="oauth")
+     */
+    public function oauthrAction(Request $request)
+    {
+        $em = $this->get('doctrine')->getManager();
+        $twitterService = $this->get('app.twitter');
+
+        $request_token = [];
+        $request_token['oauth_token'] = $_SESSION['oauth_token'];
+        $request_token['oauth_token_secret'] = $_SESSION['oauth_token_secret'];
+
+        if (isset($_REQUEST['oauth_token']) && $request_token['oauth_token'] !== $_REQUEST['oauth_token']) {
+            throw new \Exception("Twitter Connection error");
+            
+        }
+
+        $twitterConnection = $twitterService->getConnection(
+            $request_token['oauth_token'],
+            $request_token['oauth_token_secret']
+        );
+
+        $access_token = $twitterConnection->oauth("oauth/access_token", [
+            "oauth_verifier" => $_REQUEST['oauth_verifier']
+        ]);
+
+        $tc = new TwitterConnect();
+        $tc->setAccessToken($access_token['oauth_token']);
+        $tc->setAccessTokenSecret($access_token['oauth_token_secret']);
+        $tc->setUserId($access_token['user_id']);
+        $tc->setScreenName($access_token['screen_name']);
+        $tc->setXAuthExpires($access_token['x_auth_expires']);
+
+        $em->persist($tc);
+        $em->flush();
+
+        return $this->redirectToRoute('connection_to_twitter');
+    }
+
+    /**
      * @Route("/connection", name="connection_to_twitter")
      */
     public function connectio2twitterAction(Request $request)
     {
         $em = $this->get('doctrine')->getManager();
-        $tc = new TwitterConnect();
+        $twitterService = $this->get('app.twitter');
 
-
-        $form = $this->createFormBuilder($tc)
-            ->add('access_token', TextType::class)
-            ->add('access_token_secret', TextType::class)
-            ->add('save', SubmitType::class)
-            ->getForm();
-
-         $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-            $tc = $form->getData();
-            $em->persist($tc);
-            $em->flush();
-
-            return $this->redirectToRoute('connection_to_twitter');
-        }
+        $twitterConnection = $twitterService->getConnection();
+        $url = $twitterService->getAuthorizeUrl($twitterConnection);
 
         $twitterConnect = $em->getRepository('AppBundle:TwitterConnect')->findAll();
 
         return $this->render('default/connection-to-twitter.html.twig', [
-            'form' => $form->createView(),
             'twitterConnect' => $twitterConnect,
+            'twitterConnectUrl' => $url
         ]);
     }
 

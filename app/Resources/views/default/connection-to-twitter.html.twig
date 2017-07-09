@@ -7,7 +7,7 @@
         <h1>Accounts</h1>
         {% for item in twitterConnect %}
         <div class="rows">
-            <h2>Access {{ loop.index }} <a href="{{ path('connection_to_twitter_test', { access_token: item.accessToken, access_token_secret: item.accessTokenSecret }) }}" class="testbtn btn btn-default btn-sm">test <span></span></a></h2>
+            <h2>{{ item.screenName }} <a href="{{ path('connection_to_twitter_test', { access_token: item.accessToken, access_token_secret: item.accessTokenSecret }) }}" class="testbtn btn btn-default btn-sm">test <span></span></a></h2>
 
             <div class="pull-right"><a href="{{ path('connection_to_twitter_delete', {id: item.id}) }}" class="btn btn-link">Delete</a></div>
             <p>{{ item.accessToken }}</p>
@@ -17,10 +17,7 @@
     </div>
 
     <div class="rows">
-        <h1>New Account</h1>
-        {{ form_start(form) }}
-        {{ form_widget(form) }}
-        {{ form_end(form) }} 
+        <a href="{{ twitterConnectUrl }}" class="btn btn-default">New Account</a>
    </div>
 </div>
 
