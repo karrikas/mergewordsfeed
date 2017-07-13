@@ -30,8 +30,9 @@ class DefaultController extends Controller
         if ($request->isMethod('post')) {
             $group = $request->get('group');
             $mix = $request->get('mix');
+            $unique= $request->get('unique');
 
-            $this->mix($group, $mix);
+            $this->mix($group, $mix, $unique);
 
             return $this->redirectToRoute('mixer');
         }
@@ -190,7 +191,7 @@ class DefaultController extends Controller
         return new JsonResponse($test);
     }
 
-    protected function mix($group, $value)
+    protected function mix($group, $value, $unique)
     {
         $em = $this->get('doctrine')->getManager();
 
@@ -214,18 +215,43 @@ class DefaultController extends Controller
             $info[] = explode("\n", $mix);
         }
 
+        $total = count($info[$unique]);
+
+        $index = 0;
         $str = [];
-        for ($i=0; $i<count($info[0]); $i++) {
-            for ($a=0; $a<count($info[1]); $a++) {
-                for ($b=0; $b<count($info[2]); $b++) {
-                    for ($c=0; $c<count($info[3]); $c++) {
-                        $str[] = sprintf('%s %s %s %s', trim($info[0][$i]), trim($info[1][$a]), trim($info[2][$b]), trim($info[3][$c]));
-                    }
+        while ($index <= 3) {
+            $strings = [];
+            $i = 0;
+            $pos = 0;
+            while ($i < $total) {
+                if ($pos >= count($info[$index])) {
+                    $pos = 0;
                 }
+                $strings[] = $info[$index][$pos];
+                $i++;
+                $pos++;
             }
+
+            if ($index != $unique) {
+                shuffle($strings);
+            }
+
+            $str[] = $strings;
+            $index++;
         }
 
-        foreach ($str as $key => $s) {
+        $nStrings = [];
+        for ($i=0; $i<count($str[0]); $i++) {
+            $nStrings[] = sprintf(
+                '%s %s %s %s',
+                trim($str[0][$i]),
+                trim($str[1][$i]),
+                trim($str[2][$i]),
+                trim($str[3][$i])
+            );
+        }
+
+        foreach ($nStrings as $s) {
             $message = new Message();
             $message->setGroupName($group);
             $message->setMessage($s);
