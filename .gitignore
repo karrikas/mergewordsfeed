@@ -12,6 +12,7 @@
 /composer.phar
 /app/var/feed/*
 /app/var/twet/*
+/node_modules/*
 
 /build.xml
 /rsync_exclude
